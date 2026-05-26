@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descifrando Mensaje...</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .card {
+            max-width: 500px;
+            width: 100%;
+            background: #1e1e1e;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-top: 4px solid #00ff66;
+        }
+        h1 { font-size: 24px; margin-bottom: 10px; color: #fff; }
+        p { color: #aaa; font-size: 16px; margin-bottom: 30px; }
+        
+        /* Animación de carga */
+        .loader {
+            border: 4px solid #2d2d2d;
+            border-top: 4px solid #00ff66;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn-destinar {
+            display: inline-block;
+            background: #00ff66;
+            color: #121212;
+            text-decoration: none;
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 255, 102, 0.3);
+        }
+        .btn-destinar:hover {
+            background: #00cc52;
+            transform: translateY(-2px);
+        }
+        .error-msg { color: #ff3333; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div id="loadingArea">
+        <div class="loader"></div>
+        <h1>Interceptando señal...</h1>
+        <p>Descifrando el código Tap Code de la URL.</p>
+    </div>
+
+    <div id="resultArea" style="display: none;">
+        <h1 style="color: #00ff66;">¡Código Descifrado!</h1>
+        <p>La coordenada apunta a la siguiente palabra clave: <br><strong id="decodedWord" style="color:#fff; font-size: 20px; font-family: monospace;"></strong></p>
+        <a id="finalLink" href="#" class="btn-destinar">Ir al destino real</a>
+    </div>
+</div>
+
+<script>
+// Matriz inversa para descifrar rápidamente buscando por "Fila-Columna"
+const reverseTapMatrix = {
+    '1-1': 'A', '1-2': 'B', '1-3': 'C', '1-4': 'D', '1-5': 'E',
+    '2-1': 'F', '2-2': 'G', '2-3': 'H', '2-4': 'I', '2-5': 'J',
+    '3-1': 'L', '3-2': 'M', '3-3': 'N', '3-4': 'O', '3-5': 'P',
+    '4-1': 'Q', '4-2': 'R', '4-3': 'S', '4-4': 'T', '4-5': 'U',
+    '5-1': 'V', '5-2': 'W', '5-3': 'X', '5-4': 'Y', '5-5': 'Z'
+};
+
+// URL base real a donde quieres mandar al usuario final
+const DESTINO_BASE = "https://www.cinewick.shop/";
+
+function descifrarUrl() {
+    // Obtener los parámetros de la URL actual (lo que va después de '?')
+    const urlParams = window.location.search.substring(1);
+    
+    if (!urlParams) {
+        mostrarError("No se encontró ningún código Tap Code para descifrar.");
+        return;
+    }
+
+    // Separar las letras por los guiones bajos "_"
+    const encryptedLetters = urlParams.split('_');
+    let palabraDescifrada = "";
+
+    for (let encryptedChar of encryptedLetters) {
+        // Contar cuántas filas (-) y columnas (.) tiene este bloque
+        const rows = (encryptedChar.match(/-/g) || []).length;
+        const cols = (encryptedChar.match(/\./g) || []).length;
+        
+        const key = `${rows}-${cols}`;
+        
+        if (reverseTapMatrix[key]) {
+            palabraDescifrada += reverseTapMatrix[key];
+        } else {
+            // Si hay un caracter inválido, dejamos un espacio o incógnita
+            palabraDescifrada += "?";
+        }
+    }
+
+    // Simular un retraso de 1.5 segundos para darle efecto de "hacker / descifrado"
+    setTimeout(() => {
+        document.getElementById('loadingArea').style.display = 'none';
+        document.getElementById('resultArea').style.display = 'block';
+        
+        // Mostrar la palabra en pantalla
+        document.getElementById('decodedWord').innerText = palabraDescifrada.toLowerCase();
+        
+        // Construir el enlace final (ej: https://www.cinewick.shop/cinewick)
+        // Puedes cambiar la lógica aquí si la palabra clave es un slug o tag de búsqueda
+        document.getElementById('finalLink').href = DESTINO_BASE + palabraDescifrada.toLowerCase();
+    }, 1500);
+}
+
+function mostrarError(mensaje) {
+    document.getElementById('loadingArea').innerHTML = `
+        <h1 class="error-msg">Error de Transmisión</h1>
+        <p>${mensaje}</p>
+    `;
+}
+
+// Ejecutar la función al cargar la página
+window.onload = descifrarUrl;
+</script>
+
+</body>
+</html>
