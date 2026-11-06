@@ -13,7 +13,6 @@
             --accent-hover: #0ea5e9;
             --border-color: #334155;
             --success-color: #22c55e;
-            --error-color: #ef4444;
         }
 
         body {
@@ -120,10 +119,9 @@
             font-weight: bold;
             border-radius: 4px;
             margin-bottom: 10px;
+            background-color: rgba(56, 189, 248, 0.2);
+            color: var(--accent-color);
         }
-
-        .badge.clean { background-color: rgba(34, 197, 94, 0.2); color: var(--success-color); }
-        .badge.tokenized { background-color: rgba(56, 189, 248, 0.2); color: var(--accent-color); }
 
         .copy-btn {
             background-color: transparent;
@@ -132,6 +130,7 @@
             padding: 8px;
             font-size: 0.85rem;
             margin-top: 5px;
+            width: 100%;
         }
 
         .copy-btn:hover {
@@ -145,60 +144,38 @@
         <h1>CineWick Link Tokenizer</h1>
         
         <div class="form-group">
-            <label for="urlInput">Pegá tu URL original de IMDb (con Expires y Signature):</label>
+            <label for="urlInput">Pegá tu URL original de IMDb:</label>
             <textarea id="urlInput" placeholder="https://imdb-video.media-imdb.com/..."></textarea>
         </div>
 
-        <button onclick="procesarEnlace()">Generar Enlace Tokenizado</button>
+        <button onclick="generarEnlaceProxy()">Generar Enlace Inteligente</button>
 
         <div id="resultBox" class="result-box">
-            <div id="badgeStatus" class="badge"></div>
+            <div class="badge">Enlace Automatizado por Cloudflare</div>
             <div id="resultUrl" class="result-url"></div>
             <button class="copy-btn" onclick="copiarAlPortapapeles()">Copiar Enlace</button>
         </div>
     </div>
 
     <script>
-        function procesarEnlace() {
+        function generarEnlaceProxy() {
             const rawUrl = document.getElementById('urlInput').value.trim();
             const resultBox = document.getElementById('resultBox');
             const resultUrlDiv = document.getElementById('resultUrl');
-            const badgeStatus = document.getElementById('badgeStatus');
 
             if (!rawUrl) {
                 alert("Por favor, ingresá una URL válida.");
                 return;
             }
 
-            try {
-                const urlObj = new URL(rawUrl);
-                
-                // Verificamos si es un enlace que soporta el truco sin expires (ej: ruta /mc/)
-                // O intentamos quitar el expires por defecto para ver cómo queda
-                urlObj.searchParams.delete('Expires');
-                const enlaceLimpio = urlObj.toString();
+            // CAMBIÁ ESTA URL por la de tu Cloudflare Worker real
+            const workerDomain = "https://tu-worker.tu-usuario.workers.dev"; 
 
-                // Lógica de decisión visual para el generador
-                if (rawUrl.includes('/mc/')) {
-                    badgeStatus.className = "badge clean";
-                    badgeStatus.innerText = "Permanente (Sin Expires)";
-                    resultUrlDiv.innerText = enlaceLimpio;
-                } else {
-                    // Para los enlaces estrictos que requieren proxy/token dinámico posterior:
-                    // Simulamos la creación de tu token propio apuntando a tu futuro endpoint o redireccionador
-                    const hashToken = btoa(rawUrl).substring(0, 16); // Simulación de token único
-                    const enlaceTokenizado = `${window.location.origin}/player?token=${hashToken}`;
-                    
-                    badgeStatus.className = "badge tokenized";
-                    badgeStatus.innerText = "Tokenizado (Auto-refresco por Proxy)";
-                    resultUrlDiv.innerText = enlaceTokenizado;
-                }
+            // Construimos el enlace final apuntando al Worker con el parámetro ?url=
+            const enlaceInteligente = `${workerDomain}/?url=${encodeURIComponent(rawUrl)}`;
 
-                resultBox.classList.add('active');
-
-            } catch (e) {
-                alert("La URL ingresada no tiene un formato válido.");
-            }
+            resultUrlDiv.innerText = enlaceInteligente;
+            resultBox.classList.add('active');
         }
 
         function copiarAlPortapapeles() {
